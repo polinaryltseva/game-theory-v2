@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <title>Game Theory Game</title>
+</head>
+<body>
+<div id="strategy-result">
+    <span id="strategy-indicator">correct!</span>
+    <p>The right answer is "<span id="correct-strategy">random</span>".</p>
+    <button id="try-again-btn">try again</button>
+</div>
+<div id="strategy-menu">
+    <button id="close-guess-btn">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20.6567" y="23.4853" width="20" height="4" rx="2" transform="rotate(-135 20.6567 23.4853)"
+                  fill="white"/>
+            <rect x="6.51465" y="20.6569" width="20" height="4" rx="2" transform="rotate(-45 6.51465 20.6569)"
+                  fill="white"/>
+        </svg>
+    </button>
+    <!--    <div id="example" class="strategy">-->
+    <!--        <div class="circle"></div>-->
+    <!--        <span>example</span>-->
+    <!--    </div>-->
+</div>
+<div class="main">
+    <div class="game">
+        <p id="guess-msg">Time to guess! Not enough player moves (6 max).</p>
+        <div class="scores">
+            <div class="circle circle-player">
+                <span id="player-score">0</span>
+            </div>
+            <span>scores</span>
+            <div class="circle circle-bot">
+                <span id="bot-score">0</span>
+            </div>
+        </div>
+        <div id="board">
+            <span id="player-label">player</span>
+            <span id="bot-label">bot</span>
+            <svg id="player-cooperate-svg" width="20" height="20" viewBox="0 0 20 20" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="20" width="20" height="4" rx="2" transform="rotate(-90 8 20)" fill="white"/>
+                <rect y="8" width="20" height="4" rx="2" fill="#fff"/>
+            </svg>
+            <svg id="player-defect-svg" width="20" height="4" viewBox="0 0 20 4" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+                <rect width="20" height="4" rx="2" fill="#fff"/>
+            </svg>
+            <svg id="bot-cooperate-svg" width="20" height="20" viewBox="0 0 20 20" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="20" width="20" height="4" rx="2" transform="rotate(-90 8 20)" fill="white"/>
+                <rect y="8" width="20" height="4" rx="2" fill="#fff"/>
+            </svg>
+            <svg id="bot-defect-svg" width="20" height="4" viewBox="0 0 20 4" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+                <rect width="20" height="4" rx="2" fill="#fff"/>
+            </svg>
+            <div class="field field-light"></div>
+            <div class="field field-dark"></div>
+            <div class="field field-dark"></div>
+            <div class="field field-light"></div>
+        </div>
+        <div class="controls">
+            <div class="wrapper">
+                <button id="cooperate-btn" class="interact-btn">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="20" width="20" height="4" rx="2" transform="rotate(-90 8 20)"/>
+                        <rect y="8" width="20" height="4" rx="2"/>
+                    </svg>
+                </button>
+                <button id="defect-btn" class="interact-btn">
+                    <svg width="20" height="4" viewBox="0 0 20 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="20" height="4" rx="2"/>
+                    </svg>
+                </button>
+            </div>
+            <button id="guess-btn">guess the strategy</button>
+        </div>
+    </div>
+    <section class="tutorial">
+        <span class="bold">Как работает игра?
+        </span> 
+        <p>Ваша задача - определить стратегию играющего против вас бота не более, чем за шесть ходов. Ваш ход является первым, 
+        за ним следует ответ бота.</p>
+        <span class="bold">В чем суть игры?
+        </span> 
+        <p>Эта игра - классическая диллема заключенного, которая является наглядным примером принятия решений в ситуации, при 
+            которой стороны не доверяют друг другу. Представим, что вас и некоторого другого человека задержали и подозревают 
+            в организованном преступлении, предполагая, что вы являеетесь сообщниками. Вы не можете связаться друг с другом, но 
+            каждому из вас предлагают сотрудничать и сдать сообщника взамен на меньший срок. Есть два вида действий, обозначенных + 
+            (сотрудничество) и - (предательство).
+            Пример классической матрицы игры: 
+            $$
+            \qquad \qquad BOT
+            $$
+            $$
+            \qquad \qquad \begin{matrix} + & & & & - \end{matrix} 
+            $$
+            $$ 
+            YOU \quad
+            \begin{matrix} + \\\\
+            - \end{matrix}  
+            \begin{vmatrix}
+            (4, 4)  & & (10, 0) \\\\
+            (0, 10) & & (2, 2)
+            \end{vmatrix} 
+            $$
+        </p>
+        <span class="bold">
+            А как выиграть, или Равновесие Нэша
+        </span> 
+        <p>
+            Кажется, что самым выгодным решением будет сотрудничать - ведь тогда оба получат наименьший срок. Однако, выбирая 
+            сотрудничество, вы можете остаться в тюрьме и на 10 лет, в случае, если ваш сообщник вас предаст. Таким образом, 
+            рациональным решением является предательство
+        </p>
+    </section>
+   
+</div>
+</body>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+</html>
