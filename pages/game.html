@@ -1,0 +1,109 @@
+<div id="game-result" class="information-container">
+  <span id="result-indicator"></span>
+  <p>The right answer is "<span id="correct-strategy"></span>".</p>
+  <button id="retry-button" class="button">try again</button>
+</div>
+<div id="strategy-menu" class="information-container">
+  <button id="close-menu-button" class="close-button">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20.6567" y="23.4853" width="20" height="4" rx="2" transform="rotate(-135 20.6567 23.4853)" fill="#ffffff"/>
+      <rect x="6.51465" y="20.6569" width="20" height="4" rx="2" transform="rotate(-45 6.51465 20.6569)" fill="#ffffff"/>
+    </svg>
+  </button>
+</div>
+<div id="history" class="information-container">
+  <table id="history-table"></table>
+  <button id="close-history-button" class="close-button">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20.6567" y="23.4853" width="20" height="4" rx="2" transform="rotate(-135 20.6567 23.4853)" fill="#ffffff"/>
+      <rect x="6.51465" y="20.6569" width="20" height="4" rx="2" transform="rotate(-45 6.51465 20.6569)" fill="#ffffff"/>
+    </svg>
+  </button>
+</div>
+<div class="content-container">
+  <div class="game-container">
+    <p id="guess-message">Time to guess! Not enough player moves (6 max).</p>
+    <div class="scores">
+      <div class="score-circle player-score">
+        <span id="player-score-value">0</span>
+      </div>
+      <span>scores</span>
+      <div class="score-circle bot-score">
+        <span id="bot-score-value">0</span>
+      </div>
+    </div>
+    <div id="board">
+      <span id="player-label">you</span>
+      <span id="bot-label">bot</span>
+      <svg id="player-cooperate-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="20" width="20" height="4" rx="2" transform="rotate(-90 8 20)" fill="white"/>
+        <rect y="8" width="20" height="4" rx="2" fill="#ffffff" />
+      </svg>
+      <svg id="player-defect-icon" width="20" height="4" viewBox="0 0 20 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="20" height="4" rx="2" fill="#ffffff" />
+      </svg>
+      <svg id="bot-cooperate-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="20" width="20" height="4" rx="2" transform="rotate(-90 8 20)" fill="white"/>
+        <rect y="8" width="20" height="4" rx="2" fill="#ffffff" />
+      </svg>
+      <svg id="bot-defect-icon" width="20" height="4" viewBox="0 0 20 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="20" height="4" rx="2" fill="#ffffff" />
+      </svg>
+      <div class="field light-field"></div>
+      <div class="field dark-field"></div>
+      <div class="field dark-field"></div>
+      <div class="field light-field"></div>
+    </div>
+    <div class="controls">
+      <div class="button-wrapper">
+        <button id="cooperate-button" class="button">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="20" width="20" height="4" rx="2" transform="rotate(-90 8 20)"/>
+            <rect y="8" width="20" height="4" rx="2" />
+          </svg>
+        </button>
+        <button id="defect-button" class="button">
+          <svg width="20" height="4" viewBox="0 0 20 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="20" height="4" rx="2" />
+          </svg>
+        </button>
+      </div>
+      <button id="guess-strategy-button" class="button">guess the strategy</button>
+      <button id="get-history-button" class="button">get the history</button>
+    </div>
+  </div>
+  <div id="tutorial">
+    <h2>Как работает игра?</h2>
+    <p>
+      Ваша задача — определить стратегию бота, играющего против вас,
+      не более, чем за шесть ходов. Вы ходите первым, после чего отвечает бот.
+    </p>
+    <h2>В чем суть игры?</h2>
+    <p>
+      Эта игра — классическая дилемма заключенного,
+      которая является наглядным примером принятия решений в ситуации,
+      когда стороны не доверяют друг другу.
+    </p>
+    <p>
+      Представим, что вас и другого человека задержали и подозревают в организованном преступлении,
+      предполагая, что вы являетесь сообщниками. Вы не можете связаться друг с другом,
+      но каждому из вас предлагают сотрудничать и сдать сообщника в обмен на меньший срок.
+    </p>
+    <h2>Матрица игры</h2>
+    <p>
+      Есть два вида действий, обозначенных + (сотрудничество) и - (предательство).
+      Пример классической матрицы игры:
+    </p>
+    <p>$$ \qquad \qquad BOT $$ $$ \qquad \qquad
+      \begin{matrix} + & & & & - \end{matrix} $$ $$ YOU \quad \begin{matrix} +
+      \\\\ - \end{matrix} \begin{vmatrix} (4, 4) & & (10, 0) \\\\ (0, 10) & &
+      (2, 2) \end{vmatrix} $$</p>
+    <h2> А как выиграть, или равновесие Нэша</h2>
+    <p>
+      Может показаться, что сотрудничество — самое выгодное решение,
+      ведь тогда оба получат наименьший срок. Однако, выбирая сотрудничество,
+      вы рискуете оказаться в тюрьме на 10 лет, если ваш сообщник предаст вас.
+      Таким образом, рациональным решением является предательство.
+    </p>
+  </div>
+</div>
