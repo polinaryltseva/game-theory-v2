@@ -1,132 +1,236 @@
-//console.log("game.js loaded successfully!");
+// Создаем экземпляр игры
+var game = new Game();
 
-class Game {
-  constructor() {
-    this.maxMoves = 6; //параметр, определяющий максимальное количество ходов
-    this.matrix = this.genRandomMatrix(); //вызывает функцию, которая генерирует матрицу игры
+// Прокручиваем описание игры вверх
+scrollTutorialTop()
 
-    this.scores = { player: 0, bot: 0 }; 
-    this.history = { player: [], bot: [] };
+// Добавляем очки на игровое поле
+addScores(game.getMatrix());
 
-    this.strategies = {
-      random: this.randomStrategy.bind(this),
-      "always defect": this.alwaysDefectStrategy.bind(this),
-      "always cooperate": this.alwaysCooperateStrategy.bind(this),
-      grudger: this.grudgerStrategy.bind(this),
-      copycat: this.copycatStrategy.bind(this),
-      forgiver: this.forgiverStrategy.bind(this),
-      tester: this.testerStrategy.bind(this),
-    }; // с помощью bind привязываем констекст при вызове функций, реализующих стратегии
+// Добавляем стратегии в меню
+addStrategies(game);
 
-    this.botStrategy = this.chooseRandomStrategy(this.strategies); //рандомизированно выбираем стратегию бота для раунда 
-    this.finished = false; //переменная, показывающая статус раунда
+// Устанавливаем обработчики событий для кнопок
+setupEventListeners();
+
+// Функция для прокрутки описания игры
+function scrollTutorialTop() {
+  // Получаем описание игры
+  const tutorial = document.getElementById("tutorial");
+  // Прокручиваем описание игры вверх
+  tutorial.scrollTo(0, 0);
+}
+
+function setupEventListeners() {
+  // Обработчик кнопки "Сотрудничать"
+  document.querySelector("#cooperate-button").addEventListener("click", makeMoveCooperate);
+
+  // Обработчик кнопки "Предать"
+  document.querySelector("#defect-button").addEventListener("click", makeMoveDefect);
+
+  // Обработчик кнопки "Получить историю"
+  document.querySelector("#get-history-button").addEventListener("click", getHistory);
+
+  // Обработчик кнопки "Закрыть историю"
+  document.querySelector("#close-history-button").addEventListener("click", hideHistory);
+
+  // Обработчик кнопки "Угадать стратегию"
+  document.querySelector("#guess-strategy-button").addEventListener("click", showStrategyMenu);
+
+  // Обработчик кнопки "Закрыть меню"
+  document.querySelector("#close-menu-button").addEventListener("click", hideStrategyMenu);
+
+  // Обработчик кнопки "Попробовать снова"
+  document.querySelector("#retry-button").addEventListener("click", restartGame);
+}
+
+// Функция добавления очков на игровое поле
+function addScores(matrix) {
+  const board = document.querySelector("#board");
+  const fields = board.querySelectorAll(".field");
+
+  // Проходим по каждому ключу в матрице
+  Object.keys(matrix).forEach((key, index) => {
+    // Создаем элементы для очков игрока и бота
+    const playerScore = createScoreElement(matrix[key][0]);
+    const botScore = createScoreElement(matrix[key][1]);
+
+    // Добавляем элементы очков в соответствующие поля
+    fields[index].appendChild(playerScore);
+    fields[index].appendChild(botScore);
+  });
+}
+
+// Утилитарная функция для создания элемента очков
+function createScoreElement(score) {
+  const scoreElement = document.createElement("span");
+  scoreElement.innerText = score;
+  return scoreElement;
+}
+
+// Функция добавления стратегий в меню
+function addStrategies(game) {
+  const strategyMenu = document.querySelector("#strategy-menu");
+
+  // Проходим по каждому имени стратегии
+  game.getStrategyNames().forEach((name) => {
+    // Создаем элементы для стратегии
+    const strategy = createStrategyElement(name, game);
+    strategyMenu.appendChild(strategy);
+  });
+}
+
+// Утилитарная функция для создания элемента стратегии
+function createStrategyElement(name, game) {
+  const strategy = document.createElement("div");
+  const circle = document.createElement("div");
+  const span = document.createElement("span");
+
+  strategy.id = name; // Устанавливаем ID элемента стратегии
+  span.innerText = name; // Устанавливаем текст с именем стратегии
+
+  strategy.classList.add("strategy"); // Добавляем CSS-класс для стратегии
+  circle.classList.add("strategy-circle"); // Добавляем CSS-класс для кружка
+
+  // Собираем элементы стратегии
+  strategy.appendChild(circle);
+  strategy.appendChild(span);
+
+  // Добавляем обработчик события для клика на стратегию
+  strategy.addEventListener("click", guessStrategy(game));
+  return strategy;
+}
+
+// Функция скрытия истории
+function hideHistory() {
+  document.querySelector("#history").classList.remove("show");
+}
+
+// Функция для показа истории
+function showHistory() {
+  document.querySelector("#history").classList.add("show");
+}
+
+function getHistory() {
+  // Получаем ссылку на элемент таблицы с id "history-table"
+  const historyTable = document.querySelector("#history-table");
+
+  // Очищаем содержимое таблицы
+  historyTable.innerHTML = "";
+
+  // Создаем строку заголовка таблицы
+  const headerRow = historyTable.insertRow();
+
+  // Создаем ячейки заголовка
+  const playerHeader = headerRow.insertCell();
+  const botHeader = headerRow.insertCell();
+
+  // Устанавливаем текст заголовков
+  playerHeader.textContent = "player";
+  botHeader.textContent = "bot";
+
+  // Проходим по истории игры, добавляя строки в таблицу
+  for (let i = 0; i < game.getHistory().player.length; i++) {
+    // Создаем строку таблицы
+    const row = historyTable.insertRow();
+
+    // Создаем ячейки данных
+    const playerCell = row.insertCell();
+    const botCell = row.insertCell();
+
+    // Устанавливаем текст ячеек данных
+    playerCell.textContent = game.getHistory().player[i];
+    botCell.textContent = game.getHistory().bot[i];
   }
 
-  genRandomMatrix() {
-    /*
-      Матрица игры размера 2Х2
-    */
-    const getRandomValue = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
-    const R = getRandomValue(1, 5);
-    const T = getRandomValue(R + 1, 15); // T > R
-    const P = getRandomValue(-R + 1, R - 1); // P < R
-    const S = getRandomValue(-P + 1, P - 1); // S < P
+  // Показываем таблицу с историей игры
+  showHistory();
+}
 
-    return {
-      "cooperate-cooperate": [R, R],
-      "cooperate-defect": [S, T],
-      "defect-cooperate": [T, S],
-      "defect-defect": [P, P],
-    };
+// Функция для угадывания стратегии
+function guessStrategy(game) {
+  return (event) => {
+    hideStrategyMenu(); // Скрываем меню стратегий
+
+    // Получаем элементы индикатора результата и правильной стратегии
+    const strategyIndicator = document.querySelector("#result-indicator");
+    const correctStrategy = document.querySelector("#correct-strategy");
+
+    // Проверяем, угадана ли стратегия
+    const isCorrect = game.guessStrategy(event.currentTarget.id);
+    strategyIndicator.innerText = isCorrect ? "correct 🙂" : "incorrect 🙁"; // Устанавливаем текст результата
+    correctStrategy.innerText = game.getCorrectStrategy(); // Показываем правильную стратегию
+
+    showGameResult(); // Показываем результат игры
+  };
+}
+
+// Функция для показа результата игры
+function showGameResult() {
+  document.querySelector("#game-result").classList.add("show"); // Добавляем CSS-класс для показа результата
+}
+
+// Функция для выполнения хода "Сотрудничать"
+function makeMoveCooperate() {
+  makeMove("cooperate");
+}
+
+// Функция для выполнения хода "Предать"
+function makeMoveDefect() {
+  makeMove("defect");
+}
+
+// Общая функция для выполнения хода
+function makeMove(move) {
+  // Проверяем, завершена ли игра или закончились ли ходы
+  if (game.isGameFinished() || !game.isMovesLeft()) {
+    if (!game.isMovesLeft()) {
+      document.querySelector("#guess-message").classList.add("show"); // Показываем сообщение о необходимости угадать стратегию
+    }
+    return;
   }
 
-   /*
-   Стратегии бота 
-  */
-  randomStrategy() { 
-    return Math.random() < 0.5 ? "cooperate" : "defect"; //Рандом - рандомизированно выбирает кооперацию или предательство
+  game.makeMove(move); // Делаем ход
+  updateScores(game.getScores()); // Обновляем очки
+  highlightMoveField(game.getLastPlayerBotMoves()); // Выделяем поле соответствующего хода
+}
+
+// Функция обновления очков на экране
+function updateScores(scores) {
+  // Обновляем текстовые значения для очков игрока и бота
+  document.querySelector("#player-score-value").innerText = scores.player;
+  document.querySelector("#bot-score-value").innerText = scores.bot;
+}
+
+// Функция выделения поля, соответствующего последнему ходу
+function highlightMoveField([playerMove, botMove]) {
+  const fieldIndexMap = {
+    "cooperate-cooperate": 0,
+    "cooperate-defect": 1,
+    "defect-cooperate": 2,
+    "defect-defect": 3,
+  };
+  const fieldIndex = fieldIndexMap[`${playerMove}-${botMove}`]; // Определяем индекс поля
+  const fields = document.querySelectorAll(".field");
+
+  // Удаляем класс "highlight" у предыдущего активного поля, если он есть
+  document.querySelector(".field.highlight")?.classList.remove("highlight");
+  fields[fieldIndex].classList.add("highlight"); // Добавляем класс "highlight" к текущему полю
+}
+
+// Функция для показа меню стратегий
+function showStrategyMenu() {
+  if (!game.isGameFinished()) { // Проверяем, завершена ли игра
+    document.querySelector("#strategy-menu").classList.add("show"); // Показываем меню стратегий
   }
+}
 
-  alwaysDefectStrategy() {
-    return "defect"; //Предатель - всегда предает 
-  }
+// Функция для скрытия меню стратегий
+function hideStrategyMenu() {
+  document.querySelector("#strategy-menu").classList.remove("show"); // Скрываем меню стратегий
+}
 
-  alwaysCooperateStrategy() {
-    return "cooperate"; //Всегда кооперирует
-  }
-
-  grudgerStrategy() {
-    return this.history.player.includes("defect") ? "defect" : "cooperate"; //Кооперирует до первого предательства, после - всегда предает 
-  }
-
-  copycatStrategy() {
-    //return this.history.player.length === 0 ? "cooperate" : this.history.player[this.history.player.length - 1]; 
-    return this.history.player[this.history.player.length - 1]; 
-    //Копирует поведение игрока (игрок всегда ходит первым)
-  }
-
-  forgiverStrategy() {
-    const lastTwoMoves = this.history.player.slice(-2);
-    return lastTwoMoves.includes("defect") ? "defect" : "cooperate"; //Кооперирует до первого предательства, но если после 
-    //одного предательства игрок начинает кооперировать - прощает его и возвращается к кооперации
-  }
-
-  testerStrategy() {
-    if (this.history.bot.length === 0) return "cooperate";
-    const defectCount = this.history.bot.filter(
-      (move) => move === "defect",
-    ).length;
-    const defectThreshold = Math.floor(this.history.bot.length / 5);
-
-    if (defectCount < defectThreshold) return "defect"; //Кооперирует на первом ходе, далее копирует игрока, при этом один раз 
-    //за раунд должен предать 
-
-    return this.history.player[this.history.player.length - 1];
-  }
-
-  chooseRandomStrategy(strategies) {
-    //Метод, выбирающий рандомизированно стратегию для бота в каждом раунде
-    const strategyKeys = Object.keys(strategies);
-    const randomIndex = Math.floor(Math.random() * strategyKeys.length);
-    return strategyKeys[randomIndex];
-  }
-
-  makePlayerMove(playerMove) {
-    //При ходе игрока, определяем ход бота и обновляем score
-
-    if (!this.isMovesLeft() || this.isFinished()) return;
-
-    const botMove = this.strategies[this.botStrategy]();
-    const moveKey = `${playerMove}-${botMove}`;  
-    const [playerScore, botScore] = this.matrix[moveKey];
-
-    this.scores.player += playerScore;
-    this.scores.bot += botScore;
-
-    this.history.player.push(playerMove);
-    this.history.bot.push(botMove);
-  }
-
-  guessStrategy(strategy) {
-    //При вызове метода игра завершается и игрок угадывает стратегию
-    if (this.isFinished()) return;
-    this.finished = true;
-    return this.botStrategy === strategy;
-  }
-
-  getBotStrategy() {
-    //Получаем настоящую стратегию бота, по которой он играл раунд
-    if (!this.isFinished()) return;
-    return this.botStrategy;
-  }
-
-  isMovesLeft() {
-    //Проверка на максимальное число ходов 
-    return this.history.player.length < this.maxMoves;
-  }
-
-  isFinished() {
-    //Возвращает параметр завершенности игры
-    return this.finished;
-  }
+// Функция для перезапуска игры
+function restartGame() {
+  window.location.hash = "#menu"; // Перенаправляем на страницу меню
 }
